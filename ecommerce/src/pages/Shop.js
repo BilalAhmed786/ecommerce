@@ -21,7 +21,6 @@ const ShopPage = () => {
   const [setMore, setHasMore] = useState(true);
   const [arrproducts, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [hoveredProductId, setHoveredProductId] = useState(null);
   const [page, setPage] = useState(1);
 
   const { data: procat, refetch: categoryFetch } = useGetProductCategeroyQuery(search);
@@ -91,13 +90,7 @@ const ShopPage = () => {
     setCatFilter(catFilter => !catFilter);
   };
 
-  const handleProductImageHover = (productId) => {
-    setHoveredProductId(productId);
-  };
-
-  const handleResetHoveredProduct = () => {
-    setHoveredProductId(null);
-  };
+ 
 
   dispatch(addProducts(products)); // Add products to cartslice
 
@@ -163,10 +156,9 @@ const ShopPage = () => {
        <div
        key={product._id}
        className="product-display"
-       onMouseEnter={() => setHoveredProductId(product._id)}
-       onMouseLeave={() => setHoveredProductId(null)}
+       
      >
-       <div className="image-wrapper">
+       <div >
          <Link to={`/product/${product._id}`}>
            {product.discountedprice && (
              <div className="badge">
@@ -175,22 +167,20 @@ const ShopPage = () => {
                </span>
              </div>
            )}
-           <img
-             src={hoveredProductId === product._id ? `http://localhost:3001/uploads/${product.galleryimages[0]}` : `http://localhost:3001/uploads/${product.productimage}`}
-             alt={`Product ${product._id}`}
-             className="product-image"
-           />
+        <div className="image-wrapper">
+            <img 
+            src={`http://localhost:3001/uploads/${product.galleryimages[0]}`}
+            className ='product-image'
+            />
+            
+            <img
+            src={`http://localhost:3001/uploads/${product.productimage}`}
+            className ='gallery-image'
+            />
+      </div>
+
          </Link>
      
-         {/* Buttons over image */}
-         <div className={`cart-button-container ${hoveredProductId === product._id ? 'show' : ''}`}>
-           <button onClick={() => viewDetail(product._id)} className="btnview">
-             <FontAwesomeIcon icon={faEye} />
-           </button>
-           <button onClick={() => handleAddToCart(product._id)} className="btncart">
-             <FontAwesomeIcon icon={faShoppingCart} />
-           </button>
-         </div>
        </div>
      
        <p style={{marginTop:'22px',textAlign:'left',fontStyle:'italic'}}>{product.productname}</p>

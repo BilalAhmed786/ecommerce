@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
    const OrderApi = createApi({
     reducerPath: 'Ordersapi',
-    baseQuery: fetchBaseQuery({ baseUrl: '/' }),
+    baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
     endpoints: (builder) => ({
         allOrdersforadmin: builder.query({
             query: (search) => {

@@ -11,7 +11,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 app.use(cookieParser());    
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/',routes)
+app.use('/api',routes)
 
 
 app.listen(process.env.PORT,()=>{
