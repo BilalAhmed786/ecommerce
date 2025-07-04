@@ -329,7 +329,7 @@ svg.svg-inline--fa.fa-circle-arrow-down {
   display: grid;
   position: relative;
   margin: 30px;
-  grid-template-columns: repeat(2, minmax(0px, 1fr));
+  grid-template-columns: repeat(1, minmax(0px, 1fr));
   gap: 5px;
     @media (width >= 48rem /* 768px */) {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -345,13 +345,14 @@ svg.svg-inline--fa.fa-circle-arrow-down {
   flex-direction: column;
   justify-content: left;
   padding: 10px;
+  margin: 20px;
   position: relative;
   transition: box-shadow 0.5s linear;
 }
 
 .image-wrapper{
   position: relative;
-  height: 350px;
+  height: 360px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -360,7 +361,7 @@ svg.svg-inline--fa.fa-circle-arrow-down {
 .product-image {
   position: absolute;
   width:95% ;
-  height:345px;
+  height:370px;
   top: 0;
   transition: all 1.5s linear;
   opacity:1 ;
@@ -370,7 +371,7 @@ svg.svg-inline--fa.fa-circle-arrow-down {
 .gallery-image{
   position: absolute;
   width:95% ;
-  height:345px;
+  height:370px;
   top:0;
   opacity:0;
   transition:opacity 1.5s linear;
