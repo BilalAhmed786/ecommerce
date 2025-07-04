@@ -341,32 +341,36 @@ svg.svg-inline--fa.fa-circle-arrow-down {
 
 
 .product-display {
-  width: 90%;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
   padding: 10px;
   position: relative;
-  overflow: hidden;
-  margin:20px;
-  padding:5px;
   transition: box-shadow 0.5s linear;
 }
 
+.image-wrapper{
+  position: relative;
+  height: 350px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .product-image {
-  width:95% ;
-  height: 345px;
   position: absolute;
+  width:95% ;
+  height:345px;
   top: 0;
   transition: all 1.5s linear;
-  display: block;
   opacity:1 ;
   
   
 }
 .gallery-image{
+  position: absolute;
   width:95% ;
   height:345px;
-  position: absolute;
-  display: block;
   top:0;
   opacity:0;
   transition:opacity 1.5s linear;
@@ -374,10 +378,7 @@ svg.svg-inline--fa.fa-circle-arrow-down {
 
 }
 
-.image-wrapper{
-  display: relative;
-  height: 350px;
-}
+
 .product-display:hover{
 box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
