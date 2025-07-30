@@ -1,205 +1,144 @@
 import React, { useEffect, useState } from 'react';
-import { useGetProductDataQuery, useGetProductCategeroyQuery, useGetCurrencyQuery } from '../app/apiproducts';
-import InfiniteScroll from 'react-infinite-scroll-component';
+import {
+  useGetProductDataQuery,
+  useGetProductCategeroyQuery,
+  useGetCurrencyQuery,
+} from '../app/apiproducts';
 import { Link, useNavigate } from 'react-router-dom';
-import { addToCart, addProducts } from '../reducers/cartslice';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAngleDown, faBox, faDollarSign, faTag, faShoppingCart, faEye } from '@fortawesome/free-solid-svg-icons';
+import { addProducts } from '../reducers/cartslice';
 import { useDispatch } from 'react-redux';
-import { toast } from 'react-toastify';
+import Sidebar from '../components/sidebar';
 
 const ShopPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [saleprice, setPrice] = useState('');
-  const [search, stateSearchcat] = useState('');
-  const [productcat, setCategory] = useState('');
   const [productFilter, setProductFilter] = useState('');
-  const [priceFilter, setPriceFilter] = useState(true);
-  const [catFilter, setCatFilter] = useState(true);
-  const [searchpro, setSearchpro] = useState(true);
-  const [setMore, setHasMore] = useState(true);
-  const [arrproducts, setProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [productcat, setCategory] = useState('');
+  const [saleprice, setPrice] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  
 
-  const { data: procat, refetch: categoryFetch } = useGetProductCategeroyQuery(search);
-  const { data: currency = [{ currency: '' }], refetch: fetchCurrency } = useGetCurrencyQuery();
-  const { data: fetchedProducts = [], isLoading: isFetching, refetch } = useGetProductDataQuery({
+  const { data: procat } = useGetProductCategeroyQuery('');
+  const { data: currency = [{ currency: '' }] } = useGetCurrencyQuery();
+
+  const {
+    data: fetchedProducts = [],
+    isFetching,
+    refetch,
+  } = useGetProductDataQuery({
     page,
-    pageSize: 18,
+    pageSize: 4,
     saleprice,
     productcat,
-    productFilter
+    productFilter,
   });
 
-  const products = [...new Set(arrproducts)]; // Products filtered from array
+  // Append new products or replace list on first page
+  useEffect(() => {
+    if (page === 1) {
+      setProducts(fetchedProducts);
+    } else {
+      setProducts((prev) => [...prev, ...fetchedProducts]);
+    }
 
-  const handleLoadMore = () => {
-    setPage(page + 1);
-  };
+    setHasMore(fetchedProducts.length > 0);
+  }, [fetchedProducts]);
 
+  // Infinite scroll trigger
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 &&
+        !isFetching &&
+        hasMore
+      ) {
+        setPage((prev) => prev + 1);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isFetching, hasMore]);
+
+  // Dispatch products to Redux
+  useEffect(() => {
+    dispatch(addProducts(products));
+  }, [products]);
+
+  // Reset page on filter change
   const handleFiltersChange = () => {
     setPage(1);
   };
 
-  useEffect(() => {
-    if (page === 1) {
-      setProducts(fetchedProducts);
-      refetch();
-      fetchCurrency();
-    } else {
-      setProducts(prevProducts => [...prevProducts, ...fetchedProducts]);
-    }
-  }, [fetchedProducts, page, procat]);
-
-  useEffect(() => {
-    if (page > 1 && isFetching) {
-      setIsLoading(true);
-    } else {
-      setIsLoading(false);
-    }
-  }, [isFetching, page]);
-
-  useEffect(() => {
-    setHasMore(fetchedProducts.length > 0);
-  }, [fetchedProducts]);
-
-  const [isOpen, setIsOpen] = useState(false);
-
-  const openSidebar = () => {
-    setIsOpen(true);
-  };
-
-  const closeSidebar = () => {
-    setIsOpen(false);
-    setSearchpro(true);
-    setPriceFilter(true);
-    setCatFilter(true);
-  };
-
-  const searchItem = () => {
-    setSearchpro(searchpro => !searchpro);
-  };
-
-  const priceFilterHandle = () => {
-    setPriceFilter(priceFilter => !priceFilter);
-  };
-
-  const catFilterHandle = () => {
-    setCatFilter(catFilter => !catFilter);
-  };
-
- 
-
-  dispatch(addProducts(products)); // Add products to cartslice
-
-  const handleAddToCart = (productId) => {
-    toast.success("Product added");
-    dispatch(addToCart(productId));
-  };
-
-  const viewDetail = (productId) => {
-    navigate(`/product/${productId}`);
-  };
-
   return (
     <div className='shopcontainer'>
-      <div><button className='closefilterbtn' onClick={openSidebar}>Filters</button></div>
-      <div className={`sidebar ${isOpen ? 'open' : 'close'}`}>
-        <div><button className='btncloseside' onClick={closeSidebar}>x</button></div>
-        <ul className='shopfilters'>
-          <div className='searchcontain'>
-            <FontAwesomeIcon icon={faBox} />
-            <label style={{ cursor: 'pointer', marginBottom: 10 }} onClick={searchItem}>Product Filter</label>
-            <span><FontAwesomeIcon icon={faAngleDown} /></span>
-            <div className={searchpro ? 'searchpro' : ''}>
-              <input type="text" name="productname" placeholder='Product Name' onChange={(e) => setProductFilter(e.target.value)} />
-            </div>
+     < Sidebar 
+       setCategory={setCategory} 
+       setPrice={setPrice} 
+       setProductFilter={setProductFilter}
+       productcat={productcat}
+       procat={procat}
+       handleFiltersChange={handleFiltersChange}
+       setIsOpen={setIsOpen}
+       isOpen={isOpen}
+       />
+      <div className='product-container'>
+        {products.map((product, index) => (
+          <div
+            key={product._id}
+            className={`product-display ${page > 1 ? 'new-product' : ''}`}
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <Link to={`/product/${product._id}`}>
+              {product.discountedprice && (
+                <div className='badge'>
+                  <span className='badge-text'>
+                    {(
+                      ((product.saleprice - product.discountedprice) / product.saleprice) *
+                      100
+                    ).toFixed(0)}
+                    % off
+                  </span>
+                </div>
+              )}
+              <div className='image-wrapper'>
+                <img
+                  src={`http://localhost:3001/uploads/${product.galleryimages[0]}`}
+                  className='product-image'
+                  alt={product.productname}
+                />
+                <img
+                  src={`http://localhost:3001/uploads/${product.productimage}`}
+                  className='gallery-image'
+                  alt={product.productname}
+                />
+              </div>
+            </Link>
+            <p className='product-name'>{product.productname}</p>
+            {product.discountedprice ? (
+              <div className='discountprice'>
+                <s>
+                  <p>
+                    {currency[0]?.currency} {product.saleprice}
+                  </p>
+                </s>
+                <p className='discounted'>
+                  {currency[0]?.currency} {product.discountedprice}
+                </p>
+              </div>
+            ) : (
+              <p>
+                {currency[0]?.currency} {product.saleprice}
+              </p>
+            )}
           </div>
-          <div className='searchcontain'>
-            <FontAwesomeIcon icon={faDollarSign} />
-            <label style={{ cursor: 'pointer', marginBottom: 10 }} onClick={priceFilterHandle}>Price Filter</label>
-            <span><FontAwesomeIcon icon={faAngleDown} /></span>
-            <select style={{ display: priceFilter ? 'none' : 'block' }} value={saleprice} onChange={(e) => setPrice(e.target.value)}>
-              <option value="">All</option>
-              <option value="0-50">0-50</option>
-              <option value="50-100">50-100</option>
-              <option value="100-200">100-200</option>
-            </select>
-          </div>
-          <div className='searchcontain'>
-            <span><FontAwesomeIcon icon={faTag} /></span>
-            <label style={{ cursor: 'pointer', marginBottom: 10 }} onClick={catFilterHandle}>Category Filter</label>
-            <span><FontAwesomeIcon icon={faAngleDown} /></span>
-            <select style={{ display: catFilter ? 'none' : 'block' }} value={productcat} onChange={(e) => setCategory(e.target.value)}>
-              <option value="">All Categories</option>
-              {procat ? procat.map((products, index) => (
-                <option key={index}>{products.productcat}</option>
-              )) : null}
-            </select>
-          </div>
-          <button className='applyfilters' onClick={handleFiltersChange}>Apply Filters</button>
-        </ul>
+        ))}
+        {isFetching && <p style={{ textAlign: 'center' }}>Loading...</p>}
+        {!hasMore && <p style={{ textAlign: 'center' }}>No more products</p>}
       </div>
-      <InfiniteScroll
-        dataLength={products.length}
-        next={handleLoadMore}
-        hasMore={setMore}
-        loader={<h4>Loading...</h4>}
-        endMessage={<p style={{ textAlign: 'center' }}>No more products</p>}
-        scrollThreshold={0.9}
-      >
-        <h2 style={{ textAlign: 'center', padding: 20, fontFamily: 'aviano',fontSize:18 }}>Shop</h2>
-        <div className='product-container'>
-          {products.map((product) => (
-       <div
-       key={product._id}
-       className="product-display"
-       
-     >
-       <div >
-         <Link to={`/product/${product._id}`}>
-           {product.discountedprice && (
-             <div className="badge">
-               <span className="badge-text">
-                 {(((product.saleprice - product.discountedprice) / product.saleprice) * 100).toFixed(0)}% off
-               </span>
-             </div>
-           )}
-        <div className="image-wrapper">
-            <img 
-            src={`http://localhost:3001/uploads/${product.galleryimages[0]}`}
-            className ='product-image'
-            />
-            
-            <img
-            src={`http://localhost:3001/uploads/${product.productimage}`}
-            className ='gallery-image'
-            />
-      </div>
-
-         </Link>
-     
-       </div>
-     
-       <p style={{marginTop:'22px',textAlign:'left',fontStyle:'italic'}}>{product.productname}</p>
-       {product.discountedprice ? (
-         <div className="discountprice">
-           <s>
-             <p style={{ textAlign:'left',fontFamily:'monospace' }}>{currency[0]?.currency} {product.saleprice}</p>
-           </s>
-           <p style={{ color: 'red',textAlign:'left',fontFamily:'monospace' }}>{currency[0]?.currency}{product.discountedprice}</p>
-         </div>
-       ) : (
-         <p style={{textAlign:'left',fontFamily:'monospace' }}>{currency[0]?.currency} {product.saleprice}</p>
-       )}
-     </div>
-     
-          
-          ))}
-        </div>
-      </InfiniteScroll>
     </div>
   );
 };

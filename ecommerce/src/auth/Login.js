@@ -1,196 +1,127 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useLoginUserMutation, useUserDetailsMutation } from '../app/apiauth';
 import ReCAPTCHA from 'react-google-recaptcha';
 
-
-
 function Login() {
-
-
-  const navigate = useNavigate()
-
-  const [data, stateuserdata] = useState([])
-
   const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
+  const [loginuser] = useLoginUserMutation();
+  const [userData] = useUserDetailsMutation();
 
-  const [loginuser, stateloginUser] = useLoginUserMutation()//validations 
-
-  const [userData] = useUserDetailsMutation()
-
-  const [login, logninState] = useState({
+  const [login, setLogin] = useState({
     email: '',
-    password: ''
+    password: '',
+  });
 
-  })
-
-  const LoginUser = (e) => {
-
-    const { name, value } = e.target
-
-
-    logninState({
-      ...login,
-      [name]: value
-
-    })
-
-  }
-
- 
-
-  const handleCaptchaChange = (value) => {
-    // CAPTCHA verification completed callback
+  const handleCaptchaChange = () => {
     setIsCaptchaVerified(true);
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setLogin((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const LoginCread = async (e) => {
-
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+   if (!login.email || !login.password) {
+      toast.error('Email and password are required');
+      return;
+    }
 
+    if (!isCaptchaVerified) {
+      toast.error('Please complete the CAPTCHA verification');
+      return;
+    }
 
     try {
+      const response = await loginuser(login);
 
-      if (isCaptchaVerified) {
+      const resData = response?.data;
 
-      const validation = await loginuser(login)
-
-        validation.data.map((errormessage)=>{ //validations
-          
-          if(errormessage === 'login successfully'){
-
-            toast.success(errormessage)
-
-          }else{
-
-             toast.error(errormessage)
-          
-          }
-        
-        })
-    }else {
-
-      toast.error('Please complete the CAPTCHA verification')
-     
-    }
-
-  
-
-
-      const user = await userData()
-
-
-      stateuserdata(user.data)
-
-
-    } catch (error) {
-
-      console.log(error)
-
-    }
-
-  }
-
-  useEffect(() => {
-
-    //login user cant visit login page
-
-    const logicredit = async () => {
-
-      const data = await userData()
-
-      stateuserdata(data.data)
-
-
-    }
-
-    logicredit()
-
-
-    if (data) {   //redirect on user role base
-
-
-      if (data.userrole === 'admin') {
-
-        localStorage.setItem("user",data.userrole)
-       
-        window.location.href ='http://localhost:3000/dashboard'
-
-
-      } else if (data.userrole === 'subscriber') {
-
-        
-        localStorage.setItem("user",data.userrole)
-
-        
-        window.location.href ='http://localhost:3000/client'
-
+      if (resData?.error) {
+        toast.error(resData.error);
+        return;
       }
 
+      if (resData?.role === 'admin') {
+        window.location.href = '/dashboard';
+      } else if (resData?.role === 'subscriber') {
+        window.location.href = '/client';
+      } else {
+        toast.error('Invalid role');
+      }
+
+      await userData(); // For global context (if needed)
+
+    } catch (err) {
+      toast.error('Login failed');
     }
+  };
 
-
-  }, [data])
 
   return (
-    <>
+    <section className="vh-100 d-flex align-items-center justify-content-center bg-light">
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-12 col-md-8 col-lg-6 col-xl-5">
+            <div className="card shadow">
+              <div className="card-body p-4">
+                <h2 className="text-center mb-4">Login</h2>
 
-      <section className="vh-100 bg-image">
-        <div className="mask d-flex align-items-center h-100 gradient-custom-3">
-          <div className="container h-100">
-            <div className="row d-flex justify-content-center align-items-center h-100">
-              <div className="col-12 col-md-9 col-lg-7 col-xl-6">
-                <div className="card">
-                  <div className="card-body p-6 text-xs">
-                    <h2 className="text-uppercase text-center mb-5">Login</h2>
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">Your Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      autoComplete="username"
+                      className="form-control form-control-lg"
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
 
-                    <div style={{ color: "red" }}>
+                  <div className="mb-3">
+                    <label htmlFor="password" className="form-label">Password</label>
+                    <input
+                      type="password"
+                      name="password"
+                      autoComplete="current-password"
+                      className="form-control form-control-lg"
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
 
-
-                    </div>
-
-
-                    <form method="POST" onSubmit={LoginCread}>
-                      <div className="form-outline mb-4">
-                        <input type="email" name='email' className="form-control form-control-lg" onChange={LoginUser} />
-                        <label className="form-label" htmlFor="youremail">Your Email</label>
-                      </div>
-
-                      <div className="form-outline mb-4">
-                        <input type="password" name='password' className="form-control form-control-lg" autocomplete="new-password" onChange={LoginUser} />
-                        <label className="form-label" htmlFor="password">Password</label>
-                      </div>
-
-                      <ReCAPTCHA 
+                  <div className="mb-3">
+                    <ReCAPTCHA
                       sitekey="6LdTT5wpAAAAAIm1OBDj87YplC5-S8OJp4Fa9mH8"
                       onChange={handleCaptchaChange}
-                          className='recaptchacontain'
-                      />
-
-                      <div className="d-flex justify-content-center">
-                        <button type="submit"
-                          className="btn btn-danger">Login</button>
-
-                      </div>
-
-                      <p className="text-center text-muted mt-5 mb-0">Forget you password? <Link to="/Forget-password"
-                        className="fw-bold text-body">Forget password</Link></p>
-
-                    </form>
-
+                      className="recaptchacontain"
+                    />
                   </div>
-                </div>
+
+                  <div className="d-grid">
+                    <button type="submit" className="btn btn-danger">Login</button>
+                  </div>
+
+                  <p className="text-center text-muted mt-4 mb-0">
+                    Forget your password?{' '}
+                    <Link to="/Forget-password" className="fw-bold text-decoration-none">
+                      Reset here
+                    </Link>
+                  </p>
+                </form>
               </div>
             </div>
           </div>
         </div>
-      </section>
-    </>
-  )
-
+      </div>
+    </section>
+  );
 }
 
-export default Login
+export default Login;

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import Sidebarmenu from './Sidebarmenu';
+import Sidebarmenu from './component/Sidebarmenu';
 import { useSubmitProductDataMutation } from '../app/apiproducts';
 import { useGetProductCategeroyQuery } from '../app/apiproducts';
 import { toast } from 'react-toastify';
@@ -117,7 +117,7 @@ function Addproduct() {
             <Sidebarmenu />
             <div className="marquee-container">
                 <form ref={formRef} onSubmit={handleSubmit}>
-                    <h3 style={{ textAlign: 'center', marginTop: 35, fontFamily: 'aviano' }}>Add product</h3>
+                    <h3 className="page-title">Add product</h3>
                     <div className="form-group">
                         <input
                             className="prdouctaddinput"
@@ -162,7 +162,7 @@ function Addproduct() {
                             value={formData.productdesc}
                         ></textarea>
                     </div>
-                    <div className="proimage">
+                    <div>
                         <div>
                             <input
                                 type="file"
@@ -173,8 +173,8 @@ function Addproduct() {
                                 ref={fileInputRef}
                             />
                             {selectedImage && (
-                                <div>
-                                    <img style={{ width: 200 }} src={selectedImage.src} alt='' />
+                                <div className='proimage'>
+                                    <img style={{ width: 100, margin:'auto' }} src={selectedImage.src} alt='' />
                                     <button id='previewimage' style={{ display: 'block', margin: 'auto' }} onClick={handleDelete}>X</button>
                                 </div>
                             )}

@@ -5,7 +5,7 @@ const userrole  = require('../middleware/userrole')
 const upload = require('../multer/multer');
 const {addproducts,getproducts,getsingleproduct,addcategory,getcategory,getsinglecategory,updateprocategory,deleteprocategory,getcurrency,updatecurrency,getshipment,updateshipment,
 allproducts,removeprod,removemultipleprod,updateprod,productsreviews,getproductsreviews,getsingleadminreview,getproductsslide,getreviewsforadmin,
-deletemultiplereviews,deletesinglereview,updatereviewstatus} = require('../controller/products');
+deletemultiplereviews,deletesinglereview,updatereviewstatus,deletegalleryimage} = require('../controller/products');
 
 const {alluser,singleuser,deleteuser,deletemultipleUser,updatesingleuser,searchuser,newsletter} = require('../controller/users');
 const{paymentmode,getorders,getsingleorder,removesingleorder,removemultipleorders,orderstatus}= require('../controller/orderadmin')
@@ -50,6 +50,7 @@ router.post('/updatereviewstatus',verification,userrole('admin'),updatereviewsta
 router.delete('/removeprod/:id',verification,userrole('admin'),removeprod)
 router.delete('/removemultipleprod',verification,userrole('admin'),removemultipleprod)
 router.post('/updateprod',upload.fields([{ name: 'imagesingle' }, { name: 'imagesmultiple' }]),updateprod)
+router.post('/deletegalleryimg',verification,userrole('admin'),deletegalleryimage)
 //admin access only
 //all register users for admin info
 router.get('/alluser',verification,userrole('admin'),alluser)

@@ -103,78 +103,46 @@ const register = async (req, res) => {
 //login users
 
 const login = async (req, res) => {
+    const { email, password } = req.body;
 
+    try {
+        const user = await User.findOne({ email });
 
-    const { email, password } = req.body
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
 
-    const error = []
+        const isMatch = await bcrypt.compare(password, user.password);
 
-    if (!email || !password) {
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
 
-        msg = 'All fields required'
+        jwt.sign(
+            {
+                userId: user._id,
+                username: user.name,
+                useremail: user.email,
+                userrole: user.role,
+            },
+            process.env.SECRET,
+            { expiresIn: '1h' },
+            (err, token) => {
+                if (err) {
+                    return res.status(500).json({ error: 'Token generation failed' });
+                }
 
-        error.push(msg)
+                res.cookie('token', token, { httpOnly: true });
+
+                return res.json({ role: user.role });
+            }
+        );
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Server error' });
     }
+};
 
-    const user = await User.findOne({ email: email })
-
-    if (!user) {
-
-        msg = 'Invalid email or password'
-
-        error.push(msg)
-
-        return res.json(error)
-
-
-    }
-
-    const passmatch = await bcrypt.compare(password, user.password)
-
-    if (!passmatch) {
-
-        msg = 'Invalid email or password'
-
-        error.push(msg)
-
-        return res.json(error)
-
-    }
-
-    if (error.length > 0) {
-
-        return res.status(400).json(error)
-
-    }
-
-
-    jwt.sign({
-        userId: user._id,
-        username: user.name,
-        useremail: user.email,
-        userrole: user.role
-    },
-        process.env.SECRET,
-        { expiresIn: '1h' },
-
-        (err, token) => {
-
-            if (err) throw err
-
-
-            res.cookie('token', token, { httpOnly: true });
-
-
-            error.push("login successfully")
-
-            return res.json(error)
-
-        })
-
-
-
-
-}
 
 // logout user
 const logout = async (req, res) => {
@@ -248,29 +216,29 @@ const resetpassword = async (req, res) => {
 
 
         const decoded = await new Promise((resolve, reject) => {
-           
-            jwt.verify(token,process.env.FORGOT_SECRET, (err, decoded) => {
-           
-             if (err) reject(err);
-          
-             resolve(decoded);
-            
+
+            jwt.verify(token, process.env.FORGOT_SECRET, (err, decoded) => {
+
+                if (err) reject(err);
+
+                resolve(decoded);
+
             });
         });
 
-            const resetpassword =await User.updateOne({ _id: decoded._id }, { password: hashed, retypepassword: hashed })
+        const resetpassword = await User.updateOne({ _id: decoded._id }, { password: hashed, retypepassword: hashed })
 
-            if (resetpassword) {
+        if (resetpassword) {
 
-                res.json('Password has been successfully updated.');
+            res.json('Password has been successfully updated.');
 
-            } else {
+        } else {
 
 
-                console.log('not change password')
-            }
+            console.log('not change password')
+        }
 
-    
+
 
     } catch (error) {
 

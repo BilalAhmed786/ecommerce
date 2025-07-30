@@ -97,7 +97,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
                 }),
                 getBillingaddress: builder.query({
                     query: (email) =>{
-                     
+                     console.log(email)
                       return{
                       
                            url :`/billingaddress/${email}`,

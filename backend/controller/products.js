@@ -15,52 +15,52 @@ const { Console } = require('console');
 
 const addproducts = async (req, res) => {
   try {
-      const errors = [];
-      const { productname, productcat, productshortdesc, productdesc, inventory, saleprice, discountedprice } = req.body;
+    const errors = [];
+    const { productname, productcat, productshortdesc, productdesc, inventory, saleprice, discountedprice } = req.body;
 
-      const singleimage = req.files['singleimage'] ? req.files['singleimage'][0].filename : undefined;
-      const productimages = req.files['multipleimages'] ? req.files['multipleimages'].map(image => image.filename) : undefined;
+    const singleimage = req.files['singleimage'] ? req.files['singleimage'][0].filename : undefined;
+    const productimages = req.files['multipleimages'] ? req.files['multipleimages'].map(image => image.filename) : undefined;
 
-      if (!singleimage || !productimages) {
-          errors.push('Invalid gallery or product image format');
-      }
+    if (!singleimage || !productimages) {
+      errors.push('Invalid gallery or product image format');
+    }
 
-      if (!productname || !productcat || !productdesc || !productshortdesc || !inventory || !saleprice) {
-          errors.push('All fields are required');
-      }
+    if (!productname || !productcat || !productdesc || !productshortdesc || !inventory || !saleprice) {
+      errors.push('All fields are required');
+    }
 
-      const productexist = await Products.findOne({ productname });
-      if (productexist) {
-          errors.push('Product already added');
-      }
+    const productexist = await Products.findOne({ productname });
+    if (productexist) {
+      errors.push('Product already added');
+    }
 
-      if (errors.length > 0) {
-          return res.json(errors);
-      }
+    if (errors.length > 0) {
+      return res.json(errors);
+    }
 
-      const newProduct = new Products({
-          productname,
-          productcat,
-          productdesc,
-          productshortdesc,
-          productimage: singleimage,
-          galleryimages: productimages,
-          inventory,
-          saleprice,
-          discountedprice
-      });
+    const newProduct = new Products({
+      productname,
+      productcat,
+      productdesc,
+      productshortdesc,
+      productimage: singleimage,
+      galleryimages: productimages,
+      inventory,
+      saleprice,
+      discountedprice
+    });
 
-      const prodsave = await newProduct.save();
+    const prodsave = await newProduct.save();
 
-      if (prodsave) {
-          return res.json(['Product saved successfully']);
-      } else {
-          console.log('Product not saved');
-          return res.status(500).json(['Product not saved']);
-      }
+    if (prodsave) {
+      return res.json(['Product saved successfully']);
+    } else {
+      console.log('Product not saved');
+      return res.status(500).json(['Product not saved']);
+    }
   } catch (err) {
-      console.error('Error saving product:', err);
-      return res.status(500).json(['Sale price, inventory, and discounted price should be numbers']);
+    console.error('Error saving product:', err);
+    return res.status(500).json(['Sale price, inventory, and discounted price should be numbers']);
   }
 };
 
@@ -557,137 +557,86 @@ const removemultipleprod = async (req, res) => {
 
 
 const updateprod = async (req, res) => {
-
-
   try {
-    const error = []
+    const error = [];
 
-    const { productname, productcat,
-      productshortdesc, productdesc, inventory,
-      saleprice, discountedprice, productid } = req.body
+    const {
+      productname,
+      productcat,
+      productshortdesc,
+      productdesc,
+      inventory,
+      saleprice,
+      discountedprice,
+      productid
+    } = req.body;
 
-    var image = req.files['imagesingle'];
+    const image = req.files['imagesingle'];
+    const imagespro = req.files['imagesmultiple'];
+
+    const productimage = image ? image[0].filename : null;
+    const galleryimages = imagespro ? imagespro.map((img) => img.filename) : [];
 
 
-    var productimage = image ? image[0].filename : ''
-    var imagespro = req.files['imagesmultiple'];
-    var galleryimages = imagespro ? imagespro.map((images) => {
-
-      return images.filename
-    }) : ''
-
-
-
-    if (imagespro === undefined || image === undefined) {
-
-
-      error.push('invalid file format')
-
+    if (!productname || !productcat || !productdesc || !productshortdesc || !inventory || !saleprice || !discountedprice) {
+      error.push('All fields are required');
+      return res.json(error);
     }
 
+    
+    const updateFields = {
+      productname,
+      productcat,
+      productdesc,
+      productshortdesc,
+      inventory,
+      saleprice,
+      discountedprice
+    };
 
-
-    if (!productname || !productcat || !productdesc || !productshortdesc ||
-      !productdesc || !inventory || !saleprice || !discountedprice) {
-
-
-      error.push('All fields required')
-
-
-    }
-
-    if (error.length > 0) {
-
-      return res.json(error)
-
-    }
-
-
-
-    if (image) {
-
-
-      const img = await Products.find({ _id: productid })
-
-      if (img) {
-
-        const absoluteFilePath = path.join(__dirname, `../public/uploads/${img[0].productimage}`)
-
-
-
-        fs.unlink(absoluteFilePath, (err) => {
-
-          if (err) {
-            console.error('Error deleting file:', err);
-            return;
-          }
-          console.log('File deleted successfully');
+    
+    if (productimage) {
+      const product = await Products.findById(productid);
+      if (product?.productimage) {
+        const oldImagePath = path.join(__dirname, `../public/uploads/${product.productimage}`);
+        fs.unlink(oldImagePath, (err) => {
+          if (err) console.error('Error deleting old product image:', err);
+          else console.log('Old product image deleted');
         });
       }
-
+      updateFields.productimage = productimage;
     }
 
-    if (imagespro) {
-
-
-      const img = await Products.find({ _id: productid })
-
-
-      const images = img[0].galleryimages.map((images) => (
-
-
-
-        fs.unlink(path.join(__dirname, `../public/uploads/${images}`), (error) => {
-
-          if (error) {
-
-            console.log(error)
-          } else {
-
-            console.log('images deleted')
-          }
-
-
-        })
-
-      ))
-
-    }
-
-    const productupdate = await Products.updateOne({ _id: productid }, {
-      $set: {
-        productname, productcat,
-        productdesc, productshortdesc,
-        productimage, galleryimages,
-        inventory, saleprice,
-        discountedprice
-
+   
+    if (galleryimages.length > 0) {
+      const product = await Products.findById(productid);
+      if (product?.galleryimages?.length > 0) {
+        product.galleryimages.forEach((img) => {
+          const oldGalleryPath = path.join(__dirname, `../public/uploads/${img}`);
+          fs.unlink(oldGalleryPath, (err) => {
+            if (err) console.error('Error deleting gallery image:', err);
+            else console.log('Gallery image deleted');
+          });
+        });
       }
-    })
+      updateFields.galleryimages = galleryimages;
+    }
 
-    if (productupdate) {
+    const productupdate = await Products.updateOne(
+      { _id: productid },
+      { $set: updateFields }
+    );
 
-      error.push('product updated')
-
-      return res.json(error)
-
+    if (productupdate.modifiedCount > 0) {
+      return res.json(['product updated']);
     } else {
-
-      res.json('something went wrong')
-
+      return res.json(['No changes were made']);
     }
-
-  } catch (error) {
-
-    if (error) {
-
-      return res.json(['sale price,inventory,disconted price should be numbers'])
-    }
+  } catch (err) {
+    console.error('Update error:', err);
+    return res.status(500).json({ message: 'Server error' });
   }
-
-
-
-}
+};
 
 
 
@@ -756,7 +705,7 @@ const getproductsreviews = async (req, res) => {
   try {
 
 
-    const result = await Productreview.find({ productid: req.params.id,status:'approved' })
+    const result = await Productreview.find({ productid: req.params.id, status: 'approved' })
 
 
     if (result) {
@@ -909,6 +858,32 @@ const updatereviewstatus = async (req, res) => {
 }
 
 
+const deletegalleryimage = async (req, res) => {
+  const { id, img } = req.body;
+
+  try {
+    const foundProduct = await Products.findById(id);
+
+    if (!foundProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Remove the image from galleryimages array
+    foundProduct.galleryimages.pull(img);
+
+    // Save the updated product
+    await foundProduct.save();
+
+    // Return a response to the client
+    return res.status(200).json({ message: "Image deleted", product: foundProduct });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
 
 module.exports = {
   addproducts, getproducts,
@@ -917,6 +892,6 @@ module.exports = {
   updatecurrency, getshipment, updateshipment,
   allproducts, removeprod, removemultipleprod, updateprod, productsreviews,
   getproductsreviews, getsingleadminreview, getproductsslide, getreviewsforadmin, deletesinglereview,
-  deletemultiplereviews, updatereviewstatus
+  deletemultiplereviews, updatereviewstatus, deletegalleryimage
 
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import Sidebarmenu from './Sidebarmenu'
-import DataTable from 'react-data-table-component';
+import Sidebarmenu from './component/Sidebarmenu'
+import ReuseDataTable from './component/reactdatatable';
+import Searchbar from './component/searchbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRecycle, faEdit, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify'
@@ -55,7 +56,7 @@ function Allproducts() {
         if (result.data !== 'no item selected') {
 
           toast.success(result.data)
-        window.location.reload()
+          window.location.reload()
 
         } else {
 
@@ -81,7 +82,7 @@ function Allproducts() {
 
     stateprodata(data)
 
-     refetch()
+    refetch()
 
 
   }, [data])
@@ -126,27 +127,21 @@ function Allproducts() {
 
       <div className="marquee-container">
 
-        <h5 style={{ textAlign: 'center', margin: 35 }}>Products</h5>
+        <h5 className="page-title">All products</h5>
 
-        <div style={{ display: 'flex', margin: 'auto', width: '20%' }} className='searchproduct'>
-          <input style={{ outline: 'none', borderRadius: 20, width: '100%' }} type="text" placeholder='search products' onChange={(e) => statesearchpro(e.target.value)} />
-          <div><FontAwesomeIcon icon={faSearch} /></div>
-        </div>
+        <Searchbar statesearchpro={statesearchpro}/>
+       
         {prodata && prodata.length > 0 ?
           <div className='selecteddeleteitem'> <a onClick={handlemultiitemDelete}>Delete Selected</a><div>({selectedItems})</div></div>
           : null}
 
-        <div style={{ width: '80%', margin: 'auto' }}>
-          <DataTable
-            columns={columns}
+        <div>
+          <ReuseDataTable
             data={prodata}
-            pagination
-            highlightOnHover
-            selectableRows
-            selectableRowsHighlight
-            selectableRowsSelected={selectedRows}
-            onSelectedRowsChange={handleRowSelected}
-            
+            columns={columns}
+            selectedRows={selectedRows}
+            onRowSelected={handleRowSelected}
+
           />
 
         </div>

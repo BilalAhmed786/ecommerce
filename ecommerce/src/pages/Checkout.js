@@ -12,17 +12,12 @@ function Checkout(props) {
     const shipmentcharges = props.data?.data?.[0]?.shipment || 0;
     const currency = props.data?.currency?.[0]?.currency || '';
     const cartdetails = useSelector((state) => state.cart.cart);
-    
-   
+
     const [data] = useUserDetailsMutation();
     const [userinfo, setUserinfo] = useState('');
-    const { data: billingaddress, isLoading } = useGetBillingaddressQuery(userinfo ? userinfo.useremail : '');
+    const { data: billingaddress, isLoading } = useGetBillingaddressQuery(userinfo ? userinfo?.useremail : '');
 
-    let productname = [];
-    let productsprice = [];
-    let inventory = [];
-    let productid = [];
-    let productquantity = [];
+    let productname = [], productsprice = [], inventory = [], productid = [], productquantity = [];
 
     if (cartdetails.length > 0) {
         productname = cartdetails.map((item) => item.productname);
@@ -31,101 +26,77 @@ function Checkout(props) {
         productid = cartdetails.map((item) => item._id);
         productquantity = cartdetails.map((quantity) => quantity.quantity);
     } else {
-       
         navigate('/');
-    
     }
 
-
-    // give carttotal 
     const getTotalPrice = () => {
-    
         return cartdetails.reduce((total, item) => total + item.saleprice * item.quantity, 0);
-    
     };
 
-    // totalbill 
-   
-    if(cartdetails){
-
-    
-        var carttotal = getTotalPrice();
-        var totalamount = parseInt(carttotal) + parseInt(shipmentcharges)
-
-
-    
-    }
-
-
+    let carttotal = getTotalPrice();
+    let totalamount = parseInt(carttotal) + parseInt(shipmentcharges);
 
     useEffect(() => {
         const fetchUserInfo = async () => {
             try {
                 const result = await data();
-                if (result) {
+                if (result && result.data) {
+
+                  console.log(result.data)
                     setUserinfo(result.data);
-                    setPaymentMethod(billingaddress ? billingaddress[0] : '');
-                } else {
-                    console.log('Something went wrong');
+
+                    
+                    if (billingaddress && billingaddress.length > 0) {
+                        const defaultBilling = billingaddress[0];
+                        setPaymentMethod((prev) => ({
+                            ...prev,
+                            name: defaultBilling.name || '',
+                            email: defaultBilling.email || '',
+                            mobile: defaultBilling.mobile || '',
+                            city: defaultBilling.city || '',
+                            address: defaultBilling.address || ''
+                        }));
+                    }
                 }
             } catch (error) {
                 console.log(error);
             }
         };
-
         fetchUserInfo();
     }, [billingaddress]);
+
 
     const [paymentMode] = useStripePaymentMutation();
     const stripe = useStripe();
     const elements = useElements();
     const [paymentMethod, setPaymentMethod] = useState({
-        name: '',
-        email: '',
-        mobile: '',
-        city: '',
-        address: '',
-        stripepayment: '',
+        name: '', email: '', mobile: '', city: '', address: '', stripepayment: '',
     });
 
     const handlePaymentMethodChange = (e) => {
         const { name, value } = e.target;
-        setPaymentMethod({
-            ...paymentMethod,
-            [name]: value,
-        });
+        setPaymentMethod({ ...paymentMethod, [name]: value });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (paymentMethod.stripepayment === 'Stripe') {
             const { token, error } = await stripe.createToken(elements.getElement(CardElement));
             if (token) {
                 const result = await paymentMode({
-                    token: token.id,
-                    paymentMethod, productname,
-                    productid, productsprice, inventory, productquantity,carttotal, shipmentcharges, totalamount,
+                    token: token.id, paymentMethod, productname, productid,
+                    productsprice, inventory, productquantity, carttotal, shipmentcharges, totalamount,
                 });
-
-                if (!result.data.msg) {
-                    toast.error(result.data);
-                } else {
-                    // localStorage.removeItem('cartItems');
-                    window.location.href = 'http://localhost:3000/';
-                }
-            } else {
-                toast.error(error.message);
-            }
+                if (!result.data.msg) toast.error(result.data);
+                else window.location.href = 'http://localhost:3000/';
+            } else toast.error(error.message);
         } else {
             const result = await paymentMode({
-                paymentMethod, productname,
-                productid, productsprice, inventory, productquantity, carttotal, shipmentcharges, totalamount,
+                paymentMethod, productname, productid,
+                productsprice, inventory, productquantity, carttotal, shipmentcharges, totalamount,
             });
-
-            if (!result.data.msg) {
-                toast.error(result.data);
-            } else {
+            if (!result.data.msg) toast.error(result.data);
+            else {
                 toast.success(result.data.msg);
                 localStorage.removeItem('cartItems');
                 window.location.href = 'http://localhost:3000/';
@@ -133,83 +104,60 @@ function Checkout(props) {
         }
     };
 
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
+    if (isLoading) return <div>Loading...</div>;
 
     return (
-        <div className='checkoutcontainer'>
-            <h2 style={{ textAlign: 'center', padding: 45, fontFamily: 'aviano',fontSize:18 }}>Checkout</h2>
-            <form onSubmit={handleSubmit}>
-                <div className='rowviewcontain'>
-                    <div className='rowview'>
-                        <div className='orderform'>
-                            <div className='form-group'>
-                                <label htmlFor="name">Name</label><br />
-                                <input type='text' name="name" value={paymentMethod.name || ''} onChange={handlePaymentMethodChange} />
-                            </div>
-                            <div className='form-group'>
-                                <label htmlFor="email">Email</label><br />
-                                <input type='text' name="email" value={paymentMethod.email || ''} onChange={handlePaymentMethodChange} />
-                            </div>
-                            <div className='form-group'>
-                                <label htmlFor="mobile">Contact no</label><br />
-                                <input type='text' name="mobile" value={paymentMethod.mobile || ''} onChange={handlePaymentMethodChange} />
-                            </div>
-                            <div className='form-group'>
-                                <label htmlFor="city">City</label><br />
-                                <input type='text' name="city" value={paymentMethod.city || ''} onChange={handlePaymentMethodChange} />
-                            </div>
-                            <div className='form-group'>
-                                <label htmlFor="address">Address</label><br />
-                                <textarea className='chekcoutaddress' cols='50' rows='5' name="address" value={paymentMethod.address || ''} onChange={handlePaymentMethodChange}></textarea>
-                            </div>
+        <div className='checkout-container'>
+            <h2 className='checkout-title'>Checkout</h2>
+            <form className='checkout-form' onSubmit={handleSubmit}>
+                <div className='checkout-columns'>
+                    <div className='checkout-left'>
+                        <div className='form-group'>
+                            <label>Name</label>
+                            <input type='text' name='name' value={paymentMethod.name} onChange={handlePaymentMethodChange} />
                         </div>
-                        <div className="card" style={{ width: '24rem', height: '16rem', overflow: 'auto' }}>
-                            <div className="card-body">
-                                <h5 className="card-title">Order Details</h5>
-                                <p><b>Products name</b></p>
-                                {cartdetails.map((product, index) => (
-                                    <div style={{ listStyleType: 'none' }} key={index}>
-                                        <li><b>{index + 1}</b>. {product.productname} x {product.quantity}</li>
-                                    </div>
-                                ))}
-                                <p><b>CartTotal</b>: {carttotal}</p>
-                            </div>
+                        <div className='form-group'>
+                            <label>Email</label>
+                            <input type='text' name='email' value={paymentMethod.email} onChange={handlePaymentMethodChange} />
+                        </div>
+                        <div className='form-group'>
+                            <label>Contact No</label>
+                            <input type='text' name='mobile' value={paymentMethod.mobile} onChange={handlePaymentMethodChange} />
+                        </div>
+                        <div className='form-group'>
+                            <label>City</label>
+                            <input type='text' name='city' value={paymentMethod.city} onChange={handlePaymentMethodChange} />
+                        </div>
+                        <div className='form-group'>
+                            <label>Address</label>
+                            <textarea name='address' rows='4' value={paymentMethod.address} onChange={handlePaymentMethodChange}></textarea>
                         </div>
                     </div>
-                    <div className='placeorder' style={{ display: 'block', float: 'right' }}>
-                        <label><b>Shipment charges:</b> {shipmentcharges}</label><p></p>
-                        <label><b>Total Amount:</b> {currency}{totalamount}</label><p></p>
-                        <div>
-                            <h5>Payment Methods</h5>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="stripepayment"
-                                    value="Stripe"
-                                    checked={paymentMethod.stripepayment === 'Stripe'}
-                                    onChange={handlePaymentMethodChange}
-                                    required
-                                />
-                                Stripe
-                            </label>
+                    <div className='checkout-right'>
+                        <div className='order-summary'>
+                            <h5>Order Summary</h5>
+                            <ul>
+                                {cartdetails.map((product, index) => (
+                                    <li key={index}><b>{index + 1}</b>. {product.productname} x {product.quantity}</li>
+                                ))}
+                            </ul>
+                            <p><b>Cart Total:</b> {carttotal}</p>
                         </div>
-                        <div>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="stripepayment"
-                                    value="cod"
-                                    checked={paymentMethod.stripepayment === 'cod'}
-                                    onChange={handlePaymentMethodChange}
-                                    required
-                                />
-                                Cod
-                            </label>
+                        <div className='checkout-totals'>
+                            <p><b>Shipment Charges:</b> {shipmentcharges}</p>
+                            <p><b>Total Amount:</b> {totalamount} {currency}</p>
                         </div>
-                        {paymentMethod.stripepayment === 'Stripe' && <CardElement />}
-                        <button className='btn btn-danger checkoutpay' type="submit">Pay</button>
+                        <div className='payment-options'>
+                            <h5>Payment Method</h5>
+                            <label>
+                                <input type='radio' name='stripepayment' value='Stripe' checked={paymentMethod.stripepayment === 'Stripe'} onChange={handlePaymentMethodChange} required /> Stripe
+                            </label>
+                            <label>
+                                <input type='radio' name='stripepayment' value='cod' checked={paymentMethod.stripepayment === 'cod'} onChange={handlePaymentMethodChange} required /> Cash on Delivery
+                            </label>
+                            {paymentMethod.stripepayment === 'Stripe' && <CardElement className='card-element' />}
+                        </div>
+                        <button type='submit' className='btn btn-danger checkout-btn'>Pay</button>
                     </div>
                 </div>
             </form>

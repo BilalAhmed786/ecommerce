@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from 'react'
-import Sidebarmenu from './Sidebarmenu'
-import DataTable from 'react-data-table-component';
+import Sidebarmenu from './component/Sidebarmenu'
+import ReuseDataTable from './component/reactdatatable';
+import Searchbar from './component/searchbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRecycle, faEye, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify'
 import { useAllOrdersforadminQuery,useDeleteSingleOrderMutation,useDeleteMultipleOrderadminMutation } from '../app/apiorders';
 
 
-
-
 function Orders() {
 
   const [prodata, stateprodata] = useState([])
-  const [search, statesearch] = useState('')
+  const [search, statesearchpro] = useState('')
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedItems, setSelectedItems] = useState(0);
   const { data, isLoading, refetch } = useAllOrdersforadminQuery(search)
@@ -135,26 +134,20 @@ function Orders() {
 
     <div className="marquee-container">
 
-      <h5 style={{ textAlign: 'center', margin: 35 }}>Orders Detail</h5>
+      <h5 className="page-title">Orders Detail</h5>
 
-      <div style={{ display: 'flex', margin: 'auto', width: '20%' }} className='searchproduct'>
-        <input style={{ outline: 'none', borderRadius: 20, width: '100%' }} type="text" placeholder='search products' onChange={(e) => statesearch(e.target.value)} />
-        <div><FontAwesomeIcon icon={faSearch} /></div>
-      </div>
+      <Searchbar statesearchpro={statesearchpro}/>
+    
       {prodata && prodata.length > 0 ?
         <div className='selecteddeleteitem'> <a onClick={handlemultiitemDelete}>Delete Selected</a><div>({selectedItems})</div></div>
         : null}
 
-      <div style={{ width: '80%', margin: 'auto' }}>
-        <DataTable
-          columns={columns}
-          data={prodata}
-          pagination
-          highlightOnHover
-          selectableRows
-          selectableRowsHighlight
-          selectableRowsSelected={selectedRows}
-          onSelectedRowsChange={handleRowSelected}
+      <div>
+        <ReuseDataTable
+           data={prodata}
+           columns={columns}
+           selectedRows={selectedRows}
+           onRowSelected={handleRowSelected}
         
         />
 

@@ -287,6 +287,21 @@ reducerPath: 'productsApi',
                                 }
                         }
                           }),
+                        delegalleryimage:builder.mutation({
+
+                           query:(data)=>{
+                              console.log(data)
+                            return{
+                              url:'/deletegalleryimg',
+                              method:'post',
+                              body:data
+                            }
+
+
+
+                          }
+
+                        })
 
   }),
 });
@@ -315,7 +330,8 @@ export const { useSubmitProductDataMutation,
               useGetSingleReviewsforadminQuery,
               useDeletemultireviewsMutation,
               useDeletesinglereviewMutation,
-              useUpdatereviewstatusMutation
+              useUpdatereviewstatusMutation,
+              useDelegalleryimageMutation
               
               
 

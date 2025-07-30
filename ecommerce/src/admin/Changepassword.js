@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import Sidebarmenu from './Sidebarmenu'
+import Sidebarmenu from './component/Sidebarmenu'
 import { useAdminchangePasswordMutation } from '../app/apiauth'
 
 function Changepassword(props) {
@@ -61,7 +61,7 @@ function Changepassword(props) {
             <Sidebarmenu />
 
             <div className="marquee-container">
-              
+              <h5 className="page-title">Change password</h5>
                 <form style={{marginTop:20}} onSubmit={handlesubmit}>
                     <div className='form-group'>
                         <label>Current Password</label>< br />

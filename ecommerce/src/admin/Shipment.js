@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import Sidebarmenu from './Sidebarmenu'
+import Sidebarmenu from './component/Sidebarmenu'
 import { useUpdateShipmentMutation,useGetShipmentQuery } from '../app/apiproducts'
 import { toast } from 'react-toastify'
 
@@ -89,7 +89,7 @@ if(isError){
     <div className="marquee-container">
 
     <form onSubmit={submithandler}>
-          <h2 style={{ textAlign: 'center', margin: 12 }}> Shipment Charges</h2>
+          <h2 className="page-title"> Shipment Charges</h2>
           <div className='form-group'>
 
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import Sidebarmenu from './Sidebarmenu'
+import Sidebarmenu from './component/Sidebarmenu'
 import { useGetCurrencyQuery } from '../app/apiproducts'
 import { useUpdateCurrencyMutation } from '../app/apiproducts'
 import { toast } from 'react-toastify'
@@ -84,7 +84,7 @@ function Currency() {
       <div className="marquee-container">
 
         <form onSubmit={submithandler}>
-          <h2 style={{ textAlign: 'center', margin: 12 }}> Currency</h2>
+          <h2 className="page-title"> Currency</h2>
           <div className='form-group'>
 
 

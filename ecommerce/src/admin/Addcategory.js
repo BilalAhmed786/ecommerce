@@ -1,32 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import Sidebarmenu from './Sidebarmenu';
+import Sidebarmenu from './component/Sidebarmenu';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRecycle, faEdit } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
+import Searchbar from './component/searchbar';
+import ReuseDataTable from './component/reactdatatable'; // ✅ your reusable table
 import {
     useSubmitProductCategeroyMutation,
-    useGetProductCategeroyQuery, useUpdateProductCategeroyMutation,
-    useGetsingleProductCategeroyQuery, useDeleteProductCategeroyMutation
+    useGetProductCategeroyQuery,
+    useUpdateProductCategeroyMutation,
+    useGetsingleProductCategeroyQuery,
+    useDeleteProductCategeroyMutation
 } from '../app/apiproducts';
 
 function Addcategory() {
-
     const [modelformdisplay, statemodeform] = useState(false);
     const [id, setId] = useState('');
-    const [searchitem, searchcat] = useState('');
+    const [searchitem, statesearchpro] = useState('');
     const [productcat] = useSubmitProductCategeroyMutation();
-    const { data, isLoading, refetch } = useGetProductCategeroyQuery(searchitem);
+    const { data, refetch } = useGetProductCategeroyQuery(searchitem);
     const { data: singlecategory, refetch: singleCat } = useGetsingleProductCategeroyQuery(id);
     const [updateproCat] = useUpdateProductCategeroyMutation();
     const [deleteproCat] = useDeleteProductCategeroyMutation();
-
-    const [productcatval, stateproductcatval] = useState({
-        productcat: ''
-    });
-
-    const [singleupdatedata, singlecatupdate] = useState({
-        productcat: ''
-    });
+    const [productcatval, stateproductcatval] = useState({ productcat: '' });
+    const [singleupdatedata, singlecatupdate] = useState({ productcat: '' });
 
     useEffect(() => {
         if (singlecategory) {
@@ -36,31 +33,23 @@ function Addcategory() {
 
     const changehandler = (e) => {
         const { name, value } = e.target;
-        stateproductcatval({
-            ...productcatval,
-            [name]: value
-        });
+        stateproductcatval({ ...productcatval, [name]: value });
     };
 
     const singlecathandle = (e) => {
         const { name, value } = e.target;
-        singlecatupdate({
-            ...singleupdatedata,
-            [name]: value
-        });
+        singlecatupdate({ ...singleupdatedata, [name]: value });
     };
 
     const productcathandle = async (e) => {
         e.preventDefault();
         try {
             const result = await productcat(productcatval);
-            if (result) {
-                if (result.data === 'category saved') {
-                    toast.success(result.data);
-                    refetch();
-                } else {
-                    toast.error(result.data);
-                }
+            if (result?.data === 'category saved') {
+                toast.success(result.data);
+                refetch();
+            } else {
+                toast.error(result.data);
             }
         } catch (error) {
             console.log(error);
@@ -77,15 +66,12 @@ function Addcategory() {
         e.preventDefault();
         try {
             const result = await updateproCat({ ...singleupdatedata, id });
-            if (result) {
-                if (result.data === 'update successfully') {
-                    toast.success(result.data);
-                    refetch();
-                } else {
-                    toast.error(result.data);
-                }
+            if (result?.data === 'update successfully') {
+                toast.success(result.data);
+                statemodeform(false);
+                refetch();
             } else {
-                console.log("something went wrong");
+                toast.error(result.data);
             }
         } catch (error) {
             console.log(error);
@@ -95,75 +81,89 @@ function Addcategory() {
     const deleteHandle = async (id) => {
         try {
             const result = await deleteproCat(id);
-            if (result) {
+            if (result?.data) {
                 toast.success(result.data);
                 refetch();
-            } else {
-                console.log('something went wrong');
             }
         } catch (error) {
             console.log(error);
         }
     };
 
+    const columns = [
+        {
+            name: 'Category',
+            selector: row => row.productcat,
+            sortable: true
+        },
+        {
+            name: 'Edit',
+            cell: row => (
+                <FontAwesomeIcon icon={faEdit} onClick={() => editHandle(row._id)} style={{ cursor: 'pointer', color: '#007bff' }} />
+            ),
+            ignoreRowClick: true
+        },
+        {
+            name: 'Delete',
+            cell: row => (
+                <FontAwesomeIcon icon={faRecycle} onClick={() => deleteHandle(row._id)} style={{ cursor: 'pointer', color: 'red' }} />
+            ),
+            ignoreRowClick: true
+        }
+    ];
+
     return (
-        <>
-            <div className='dashboardcontainer'>
-                <Sidebarmenu />
-                <div className="marquee-container">
-                    <h3 style={{ textAlign: "center", margin: 15, fontFamily: 'aviano' }}>Add Category</h3>
-                    <form onSubmit={productcathandle}>
-                        <div className='form-group'>
-                            <label htmlFor='productcat'><b style={{ fontFamily: 'aviano' }}>Product Category</b></label><br />
-                            <input name="productcat" style={{ textAlign: 'center', margin: 15 }} type='text'
-                                placeholder='productcategory' onChange={changehandler} />
-                        </div>
-                        <input className='btn btn-danger' style={{
-                            display: "block",
-                            marginLeft: 'auto', marginRight: 'auto',
-                            textAlign: 'center'
-                        }}
-                            type="submit" value="Add Category" />
-                    </form>
-                </div>
+        <div className="dashboardcontainer">
+            <Sidebarmenu />
+
+            <div className="marquee-container">
+                <h3 className="page-title">Add Category</h3>
+                <form className="category-form" onSubmit={productcathandle}>
+
+                    <input
+                        name="productcat"
+                        type="text"
+                        placeholder="Enter category name"
+                        onChange={changehandler}
+                        required
+                    />
+                    <button type="submit" className="btn-submit">Add Category</button>
+                </form>
             </div>
-            <div className='categorytb'>
-                <input style={{ display: 'block', margin: 'auto', marginBottom: 20 }}
-                    type='text' placeholder='search category' onChange={(e) => searchcat(e.target.value)} />
-                {data && data.length > 0 ?
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Categories</th>
-                                <th>Edit</th>
-                                <th>Delete</th>
-                            </tr>
-                        </thead>
-                        {data.map((categories) => (
-                            <tbody key={categories._id}>
-                                <tr>
-                                    <td>{categories.productcat}</td>
-                                    <td><FontAwesomeIcon onClick={() => editHandle(categories._id)} icon={faEdit} /></td>
-                                    <td><FontAwesomeIcon onClick={() => deleteHandle(categories._id)} icon={faRecycle} /></td>
-                                </tr>
-                            </tbody>
-                        ))}
-                    </table>
-                    : <h6 style={{ textAlign: 'center', fontFamily: 'aviano' }}>no record found</h6>}
-                <div style={{ display: modelformdisplay ? 'block' : 'none' }} className='modelformcat'>
-                    <button onClick={() => statemodeform(false)} className="catgorybtn">x</button>
-                    <form onSubmit={updatecatHandle}>
-                        <div className='form-group'>
-                            <label>Category</label><br /><br />
-                            <input className='prodcutcatinput' type="text" name='productcat'
-                                value={singleupdatedata.productcat || ''} onChange={singlecathandle} />
-                        </div>
-                        <input style={{ display: 'block', margin: 'auto' }} className='btn btn-danger'
-                            type="submit" value="Update" />
-                    </form>
-                </div>
+
+            <div>
+                <Searchbar statesearchpro={statesearchpro} />
+
+                <ReuseDataTable
+                    columns={columns}
+                    data={data || []}
+                    pagination
+                    highlightOnHover
+                    dense
+                />
             </div>
-        </>
+
+            {modelformdisplay && (
+                <div className="modal-overlay">
+                    <div className="modal-form">
+                        <button className="close-modal" onClick={() => statemodeform(false)}>×</button>
+                        <form onSubmit={updatecatHandle}>
+                            <label htmlFor="productcat">Edit Category</label>
+                            <input
+                                className="modal-input"
+                                type="text"
+                                name="productcat"
+                                value={singleupdatedata.productcat}
+                                onChange={singlecathandle}
+                                required
+                            />
+                            <button type="submit" className="btn-submit">Update</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+        </div>
     );
 }
 

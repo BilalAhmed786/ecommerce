@@ -1,54 +1,41 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUserDetailsMutation } from '../app/apiauth';
 
-function ClientProtected(props) {
-
-  const { Component } = props
-
-  const navigate = useNavigate()
-
-  const [userdetails, userstateDetail] = useState('')
-  
-
-  const [data] = useUserDetailsMutation()
-
-  
+function ClientProtected({ Component }) {
+  const navigate = useNavigate();
+  const [fetchUserDetails] = useUserDetailsMutation();
+  const [userDetails, setUserDetails] = useState(null);
 
   useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const res = await fetchUserDetails();
+        const user = res?.data;
 
-    const userdetail = async () => {
-
-      const newdata = await data()
-
-      userstateDetail(newdata?newdata.data:'')
-
-      if (newdata.error || newdata.data.userrole !== 'subscriber') {
-
-        localStorage.removeItem('user')
-        
-
-        window.location.href='/login'
-
+        if (!user || user.userrole !== 'subscriber') {
+          navigate('/login');
+        } else {
+          setUserDetails(user);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user', err);
+        navigate('/login');
       }
+    };
 
-    }
+    checkUser();
+  }, [fetchUserDetails, navigate]);
 
-    userdetail();
-
-  }, [data])
-
+  if (!userDetails) return null; // Or loading spinner
 
   return (
-    <>
-      <Component userid={userdetails?userdetails.userId:''} username={userdetails?userdetails.username:''} useremail={userdetails?userdetails.useremail:''}/>
-    </>
-
-  )
-
-
+    <Component
+      userid={userDetails.userId}
+      username={userDetails.username}
+      useremail={userDetails.useremail}
+    />
+  );
 }
 
-export default ClientProtected
-
-
+export default ClientProtected;

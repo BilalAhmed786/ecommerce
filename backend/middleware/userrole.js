@@ -1,22 +1,14 @@
 function checkUserRole(role) {
-console.log(role)
-    return (req, res, next) => {
+  return (req, res, next) => {
+    const userRole = req.user?.userrole;
 
+    if (userRole !== role) {
+      console.log(`Access denied: Required ${role}, found ${userRole}`);
+      return res.status(403).json({ message: `Access denied: Requires ${role}` });
+    }
 
-        const userRole = req.user?.userrole;
-
-       
-         if (userRole !== role) {
-
-
-           return res.redirect('http://localhost:3000/login')
-
-        }
-
-        next()
-
-
-    };
+    return next();
+  };
 }
 
-module.exports = checkUserRole
+module.exports = checkUserRole;

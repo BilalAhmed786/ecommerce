@@ -3,34 +3,37 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useUserDetailsMutation } from '../app/apiauth';
 
 function Protected({ Component }) {
-    const navigate = useNavigate();
-    const { id } = useParams(); // This will capture the :id parameter if present
-    const [userdetails, setUserdetails] = useState('');
-    const [data, userdata] = useUserDetailsMutation();
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [userdetails, setUserdetails] = useState(null);
+  const [fetchUserDetails] = useUserDetailsMutation();
 
-    useEffect(() => {
-        const userdetail = async () => {
-            try {
-                const newdata = await data();
-                console.log('API response:', newdata); // Log the entire response
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const res = await fetchUserDetails();
 
-                if (newdata.error === "invalid user" || newdata.data.userrole !== "admin") {
-                    localStorage.removeItem('user');
-                    navigate('/login');
-                } else {
-                    setUserdetails(newdata.data);
-                }
-            } catch (error) {
-                console.error('Error fetching user details:', error);
-                localStorage.removeItem('user');
-                navigate('/login');
-            }
-        };
+        const user = res?.data;
 
-        userdetail();
-    }, [data, navigate]);
+        if (!user || user.userrole !== 'admin') {
+          navigate('/login');
+        } else {
+          setUserdetails(user);
+        }
+      } catch (error) {
+        console.error('Error verifying user:', error);
+        navigate('/login');
+      }
+    };
 
-    return <Component user={userdetails} id={id} />;
+    checkUser();
+  }, [navigate, fetchUserDetails]);
+
+  if (!userdetails) {
+    return <div>...loading</div>
+  }
+
+  return <Component user={userdetails} id={id} />;
 }
 
 export default Protected;

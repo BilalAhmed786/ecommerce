@@ -1,28 +1,19 @@
 const jwt = require('jsonwebtoken');
 
-const Authorize = async(req, res, next) => {
-   
-    const token =  await req.cookies.token;
-    
-    if (!token) {
-       
-        return res.status(401).json({ message: 'Unauthorized' });
-    }
+const Authorize = (req, res, next) => {
+  const token = req.cookies.token;
 
-   jwt.verify(token,process.env.SECRET, (err,decoded) => {
-        
-    if (err) {
-    
-        return res.status(401).json({ message: 'Invalid token' });
-    
-    }
-        
-        req.user = decoded;
-    });
+  if (!token) {
+    return res.status(401).json({ message: 'Unauthorized: No token' });
+  }
 
-    next();
-
-
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET);
+    req.user = decoded;
+    next(); 
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid or expired token' });
+  }
 };
 
-module.exports = Authorize
+module.exports = Authorize;
